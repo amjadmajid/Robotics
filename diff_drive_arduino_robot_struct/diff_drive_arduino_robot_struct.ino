@@ -42,8 +42,8 @@ void m2_encoder(void);
 
 tachometer_t m1_tacho = {0,0,2, &m1_encoder};
 tachometer_t m2_tacho = {0,0,3, &m2_encoder};
-motor_t m_1 = {8,9,10, 0, m1_tacho};
-motor_t m_2 = {12,13,11, 0, m2_tacho};
+motor_t m_1 = {10,9,8, 0, m1_tacho};
+motor_t m_2 = {12,11,13, 0, m2_tacho};
 
 void m1_encoder(void){ m_1.tacho.ticks++; }
 void m2_encoder(void){ m_2.tacho.ticks++; }
@@ -87,35 +87,40 @@ void setup() {
       m2_setpoint = m_2.speed;
     
       Serial.begin(9600);
+      Serial1.begin(9600);
 }
 
 void bluetooth_control(){
-    while(Serial.available()>0){
+    while(Serial1.available()>0){
       delay(1);
-      char inputByte= Serial.read();
+      char inputByte= Serial1.read();
       Serial.println(inputByte);
-      if (inputByte=='L'){
-          m_1.speed = 80;
-          m_2.speed = 30;
-      }else if (inputByte=='R'){
-          m_1.speed = 30;
-          m_2.speed = 80;
-      } else if (inputByte == 'F'){
-          direction(m_1,1);
-          direction(m_2,1);
-          m_1.speed = 70;
-          m_2.speed = 70;
-      }else if(inputByte == 'S'){
-          m_1.speed = 0;
-          m_2.speed = 0;
-      }else if(inputByte == 'B'){
+
+      if(inputByte == 'B'){
+          // move backward
           direction(m_1,-1);
           direction(m_2,-1);
           m_1.speed = 60;
           m_2.speed = 60;
+      }else{
+          // wheels turn forward (maybe at zero speed!)
+          direction(m_1,1);
+          direction(m_2,1);
+          if (inputByte=='L'){
+              m_1.speed = 80;
+              m_2.speed = 30;
+          }else if (inputByte=='R'){
+              m_1.speed = 30;
+              m_2.speed = 80;
+          } else if (inputByte == 'F'){
+              m_1.speed = 70;
+              m_2.speed = 70;
+          }else{
+              m_1.speed = 0;
+              m_2.speed = 0;
+          }
       }
-      Serial.println(inputByte);
-     }
+}
 }
 
 int distance_in_ticks(unsigned long currTicks, unsigned long *prevTicks){
@@ -159,8 +164,8 @@ void loop() {
       analogWrite(m_1.pwm,m1_output);
       analogWrite(m_2.pwm,m2_output);
 
-//     Serial.println(m_1.tacho.ticks);
-//      Serial.println(m2_output);
+      Serial.println(m1_output);
+      Serial.println(m2_output);
 
   }
 }
